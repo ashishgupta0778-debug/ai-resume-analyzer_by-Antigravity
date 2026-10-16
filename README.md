@@ -1,5 +1,7 @@
 # AI Resume Analyzer & Smart ATS Scoring System 🎯
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ashishgupta0778-debug/ai-resume-analyzer_by-Antigravity)
+
 An intelligent, production-ready AI Resume Analyzer that parses resumes, matches them against job descriptions, computes weighted ATS candidate scores, identifies missing critical skills, and provides actionable resume optimization recommendations.
 
 ---
