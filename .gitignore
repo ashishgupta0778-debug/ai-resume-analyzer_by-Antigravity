@@ -45,3 +45,20 @@ htmlcov/
 
 # Logs
 *.log
+
+# Secrets & Credentials
+.env*
+*.key
+*.pem
+*.token
+credentials.json
+client_secret*.json
+
+# Personal Resumes & User Uploads (excluding sample benchmarks)
+uploads/
+user_resumes/
+personal/
+*.docx
+*.doc
+*.pdf
+!sample_data/**
