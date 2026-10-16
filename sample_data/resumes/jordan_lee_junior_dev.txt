@@ -1,0 +1,24 @@
+Jordan Lee
+Austin, TX | jordan.lee.code@email.com | (555) 412-8821
+github.com/jordanlee-dev
+
+SUMMARY
+Motivated Junior Web Developer with 1 year of experience creating responsive websites and personal projects. Looking to join an engineering team as a Software Engineer.
+
+SKILLS
+HTML, CSS, JavaScript, Basic React, Git, Bootstrap
+
+WORK EXPERIENCE
+
+Junior Frontend Intern | WebCraft Digital, Austin, TX
+June 2023 – May 2024
+• Built web pages using HTML5, CSS3, and JavaScript for local business clients.
+• Assisted senior team members in testing user interface components with Bootstrap.
+• Fixed minor CSS bugs and updated website copy.
+
+EDUCATION
+Associate Degree in Web Development | Austin Community College (2023)
+
+PROJECTS
+• Portfolio Website: Personal portfolio website showcasing projects built with HTML, CSS, and basic JavaScript.
+• Recipe Finder App: Simple React web app fetching data from a public recipe API.

@@ -1,0 +1,22 @@
+LEAD DATA SCIENTIST & AI ENGINEER
+Location: San Francisco, CA (Hybrid) | Experience: 4+ years | Department: Applied AI
+
+ABOUT THE ROLE:
+We are seeking an experienced Lead Data Scientist to build next-generation machine learning and generative AI systems. You will lead end-to-end ML model development, fine-tune LLMs, design RAG architectures, and deploy models into production environments.
+
+RESPONSIBILITIES:
+- Design, train, evaluate, and deploy scalable Machine Learning and Deep Learning models using PyTorch, TensorFlow, and Scikit-Learn.
+- Build Retrieval-Augmented Generation (RAG) pipelines utilizing LangChain, LlamaIndex, and Vector Databases (Pinecone, ChromaDB).
+- Perform advanced feature engineering, statistical modeling, and data analysis on large unstructured datasets with Pandas and NumPy.
+- Work closely with data engineering teams to design automated ETL pipelines using Apache Spark and SQL.
+- Implement MLOps workflows with MLflow and Docker for model tracking, versioning, and continuous evaluation.
+- Partner with cross-functional product and engineering leaders to translate business problems into data-driven AI capabilities.
+
+REQUIRED QUALIFICATIONS:
+- 4+ years of industry experience as a Data Scientist or Machine Learning Engineer.
+- Deep expertise in Python, PyTorch, TensorFlow, and Scikit-Learn.
+- Experience with NLP, Large Language Models (LLMs), Prompt Engineering, and RAG architectures.
+- Strong proficiency in SQL and relational/analytical databases (Snowflake, BigQuery, PostgreSQL).
+- Hands-on knowledge of MLOps, containerization with Docker, and cloud deployments on AWS or GCP.
+- Strong mathematical background in statistics, probability, and linear algebra.
+- Master's or Ph.D. in Computer Science, Data Science, Statistics, or related technical field.

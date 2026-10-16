@@ -1,0 +1,32 @@
+Sarah Chen, M.S.
+New York, NY | sarah.chen.ai@email.com | (555) 729-1044
+linkedin.com/in/sarahchen-ai | github.com/sarahchen-ml
+
+PROFESSIONAL SUMMARY
+Senior Data Scientist and Machine Learning Engineer with 5+ years of experience building predictive models, NLP algorithms, and enterprise LLM applications. Specialized in PyTorch, deep learning, RAG architectures, and deploying models with Docker and AWS.
+
+TECHNICAL SKILLS
+- Languages: Python, SQL, R, Bash
+- AI & Machine Learning: PyTorch, TensorFlow, Scikit-Learn, Pandas, NumPy, Hugging Face, LLMs, LangChain, RAG
+- Data Systems & Big Data: Snowflake, BigQuery, PostgreSQL, Apache Spark, Airflow
+- Cloud & MLOps: Docker, AWS (SageMaker, S3, EC2), MLflow, Git, CI/CD
+- Math & Methods: Statistical Modeling, Deep Learning, NLP, Computer Vision, A/B Testing
+
+WORK EXPERIENCE
+
+Lead AI & Data Scientist | Cortex Analytics, New York, NY
+March 2021 – Present
+• Architected and deployed an enterprise Retrieval-Augmented Generation (RAG) system using LangChain, PyTorch, and Pinecone, boosting internal search accuracy by 47%.
+• Trained and fine-tuned Transformer-based LLM models on proprietary text datasets containing over 12 million documents.
+• Spearheaded MLOps pipelines with Docker and MLflow on AWS SageMaker, decreasing model retraining and deployment duration by 60%.
+• Mentored a squad of 5 junior data scientists on deep learning methodologies and statistical experimentation.
+
+Machine Learning Engineer | DataVision Labs, Boston, MA
+June 2019 – February 2021
+• Developed predictive churn classification models using Scikit-Learn and Pandas, retaining $1.2M in annual recurring contract revenue.
+• Built automated ETL pipelines using SQL and Apache Spark processing 450GB of streaming telemetry data daily.
+• Designed rigorous A/B testing frameworks evaluated across 200,000+ active users.
+
+EDUCATION
+Master of Science in Data Science | Columbia University, New York, NY (2019)
+Bachelor of Science in Applied Mathematics | University of Michigan (2017)

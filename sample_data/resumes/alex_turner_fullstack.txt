@@ -1,0 +1,39 @@
+Alex Turner
+San Francisco, CA | alex.turner@email.com | (555) 382-9102
+linkedin.com/in/alexturner-dev | github.com/alexturnercode
+
+PROFESSIONAL SUMMARY
+Senior Full Stack Software Engineer with 6+ years of experience designing and scaling distributed web applications, high-throughput microservices, and responsive user interfaces. Proven track record of reducing latency by 42% and driving engineering velocity across cross-functional agile teams.
+
+TECHNICAL SKILLS
+- Programming Languages: TypeScript, JavaScript, Python, SQL, HTML5, CSS3
+- Frontend: React, Next.js, Redux Toolkit, Tailwind CSS, Webpack, Vite
+- Backend & APIs: Node.js, Express, FastAPI, REST APIs, GraphQL, Microservices
+- Databases & Caching: PostgreSQL, Redis, MongoDB
+- Cloud & DevOps: Docker, AWS (EC2, S3, RDS, Lambda), GitHub Actions, CI/CD, Git
+- Testing & Methodologies: Jest, Pytest, Agile / Scrum, System Design, TDD
+
+WORK EXPERIENCE
+
+Senior Full Stack Engineer | Apex Cloud Solutions, San Francisco, CA
+June 2021 – Present
+• Architected and launched a customer-facing SaaS portal using React, Next.js, and TypeScript, serving over 150,000 active monthly users.
+• Spearheaded the migration of monolithic APIs to Node.js and FastAPI microservices, decreasing response latency by 38% and saving $45,000 in monthly AWS hosting costs.
+• Designed and optimized PostgreSQL database schemas with Redis caching layers, improving complex query throughput by 55%.
+• Implemented automated CI/CD deployment pipelines using GitHub Actions and Docker, reducing production deployment release cycles from 3 hours to 14 minutes.
+• Mentored 4 junior and mid-level software developers through systematic code reviews and pair programming sessions.
+
+Full Stack Developer | NexaTech Systems, Austin, TX
+August 2018 – May 2021
+• Developed responsive user interfaces with React and Redux, achieving 99.8% cross-browser test coverage.
+• Engineered scalable REST APIs using Express.js and PostgreSQL to process over 2.5 million daily API transactions.
+• Automated unit and end-to-end testing with Jest and Cypress, reducing regression bugs in production by 28%.
+• Collaborated in a 9-person Agile Scrum team delivering bi-weekly product releases on schedule.
+
+EDUCATION
+Bachelor of Science in Computer Science | University of California, Berkeley
+Graduated: May 2018 | GPA: 3.82
+
+PROJECTS
+• DevSync Platform: Open-source developer productivity tool built with Next.js, FastAPI, and PostgreSQL with 1,200+ GitHub stars.
+• CloudTelemetry Dashboard: Real-time monitoring metrics visualization tool utilizing React, WebSockets, and Redis.

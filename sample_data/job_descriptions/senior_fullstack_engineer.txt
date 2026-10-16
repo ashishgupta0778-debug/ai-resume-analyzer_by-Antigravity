@@ -1,0 +1,29 @@
+SENIOR FULL STACK ENGINEER
+Location: Remote / Hybrid | Experience: 5+ years | Department: Core Platform Engineering
+
+ABOUT THE ROLE:
+We are looking for a Senior Full Stack Engineer with 5+ years of experience to lead the development of our high-scale cloud platform. You will build and scale web applications, design distributed REST and GraphQL APIs, and collaborate across engineering and product teams.
+
+RESPONSIBILITIES:
+- Architect, build, and maintain scalable web applications using React, TypeScript, and Next.js on the frontend.
+- Design resilient backend microservices with Node.js, Express, and Python (FastAPI).
+- Optimize relational and NoSQL databases including PostgreSQL, Redis, and MongoDB for performance and high availability.
+- Deploy and manage containerized services using Docker, Kubernetes, and AWS (EC2, S3, RDS, Lambda).
+- Implement robust CI/CD pipelines with GitHub Actions to automate testing and deployments.
+- Conduct code reviews, establish engineering best practices, and mentor junior and mid-level developers.
+- Collaborate with product managers and designers in an Agile/Scrum environment to deliver product features on roadmap.
+
+REQUIRED SKILLS & QUALIFICATIONS:
+- 5+ years of software engineering experience building full stack web applications.
+- Strong proficiency in JavaScript, TypeScript, and modern React (Next.js, Redux or Zustand).
+- Deep experience with backend development in Node.js or Python.
+- Proven expertise in SQL and relational database design (PostgreSQL or MySQL).
+- Solid grasp of REST API and GraphQL architecture.
+- Hands-on experience with Docker, containerization, and AWS cloud services.
+- Familiarity with CI/CD, Git version control, and Test-Driven Development (TDD with Jest / Pytest).
+- Strong communication, system design, and problem-solving skills.
+
+NICE TO HAVE:
+- Experience with Kubernetes, Terraform, and infrastructure as code.
+- Familiarity with event-driven architecture using Kafka or RabbitMQ.
+- Bachelor's or Master's degree in Computer Science or equivalent practical experience.

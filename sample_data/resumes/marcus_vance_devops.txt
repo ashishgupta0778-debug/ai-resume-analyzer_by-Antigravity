@@ -1,0 +1,33 @@
+Marcus Vance
+Seattle, WA | marcus.vance@email.com | (555) 918-2736
+linkedin.com/in/marcusvance-devops | github.com/marcusv-infra
+
+PROFESSIONAL SUMMARY
+DevOps & Cloud Infrastructure Architect with 7+ years of experience engineering secure, highly scalable cloud systems. Expert in AWS, Kubernetes, Terraform, CI/CD automation, and site reliability engineering with consistent 99.99% uptime achievement.
+
+CORE COMPETENCIES
+- Cloud: AWS, Google Cloud (GCP)
+- Containers & Orchestration: Kubernetes, Docker, Helm
+- Infrastructure as Code (IaC): Terraform, Ansible, CloudFormation
+- CI/CD & Automation: GitHub Actions, GitLab CI, Jenkins, ArgoCD
+- Observability: Prometheus, Grafana, Datadog
+- Languages: Python, Bash / Shell, Go
+- Operating Systems: Linux, Unix, Ubuntu
+
+EXPERIENCE
+
+Principal Cloud DevOps Engineer | OrbitCloud Systems, Seattle, WA
+January 2021 – Present
+• Spearheaded multi-region Kubernetes migration across 45 microservices on AWS EKS using Terraform, slashing infrastructure compute costs by 35% ($180k/yr).
+• Engineered zero-downtime automated deployment pipelines with GitHub Actions and ArgoCD, increasing deployment frequency from 2 to 24 releases per week.
+• Configured unified enterprise telemetry dashboards in Prometheus and Grafana, lowering Mean Time to Detection (MTTD) by 50%.
+• Championed infrastructure security controls, implementing OAuth2, least-privilege IAM policies, and vulnerability scanners.
+
+Senior Infrastructure Engineer | CloudScale Networks, Portland, OR
+May 2017 – December 2020
+• Automated cloud resource provisioning across 3 AWS regions using Terraform modules.
+• Administered 80+ Linux production servers with automated Ansible configuration management scripts.
+• Built incident response automation in Python and Bash reducing manual alert escalation by 70%.
+
+EDUCATION
+Bachelor of Science in Information Technology | University of Washington (2017)

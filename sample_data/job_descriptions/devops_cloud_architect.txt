@@ -1,0 +1,21 @@
+DEVOPS & CLOUD INFRASTRUCTURE ARCHITECT
+Location: Remote | Experience: 5+ years | Department: Infrastructure & SRE
+
+ABOUT THE ROLE:
+Join our Infrastructure and Site Reliability Engineering team to spearhead our cloud modernization efforts. You will manage mission-critical multi-region AWS and Kubernetes infrastructure, build high-velocity CI/CD automation, and enforce enterprise cloud security.
+
+RESPONSIBILITIES:
+- Architect and manage multi-cluster Kubernetes environments on AWS (EKS) using Terraform and Helm.
+- Maintain CI/CD pipelines with GitHub Actions and GitLab CI, reducing deployment cycle times.
+- Implement robust telemetry, observability, and alerting with Prometheus, Grafana, and Datadog.
+- Drive Infrastructure as Code (IaC) governance, drift detection, and automated provisioning.
+- Lead incident response, conduct blameless post-mortems, and optimize system resilience and SLAs to 99.99%.
+- Script operational automation with Python and Bash.
+
+REQUIRED QUALIFICATIONS:
+- 5+ years of experience in DevOps, Cloud Architecture, or SRE roles.
+- Expert-level knowledge of AWS cloud services and architecture.
+- Extensive production hands-on experience with Kubernetes, Docker, and container networking.
+- Mastery of Terraform and Infrastructure as Code.
+- Strong scripting proficiency in Python and Bash / Shell scripting.
+- Deep understanding of Linux internals, TCP/IP networking, and cybersecurity practices.

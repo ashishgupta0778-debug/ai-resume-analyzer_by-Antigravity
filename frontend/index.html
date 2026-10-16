@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Analyzer | Smart ATS Candidate Scoring & Skill Gap Identification</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <i data-lucide="scan-line" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-bold text-lg text-slate-900 tracking-tight">TalentScan <span class="text-blue-600">AI</span></h1>
+                        <span class="px-2 py-0.5 rounded-full text-2xs font-semibold bg-blue-100 text-blue-700 uppercase tracking-wider">ATS 2.0</span>
+                    </div>
+                    <p class="text-2xs text-slate-500 font-medium">Intelligent Resume Matching, Candidate Scoring & Skill Gaps</p>
+                </div>
+            </div>
+
+            <!-- Mode Selector Switcher -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button id="singleModeTab" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all shadow-xs bg-blue-600 text-white flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    <span>Candidate Deep Dive</span>
+                </button>
+                <button id="recruiterModeTab" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 flex items-center gap-2">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>Recruiter Batch Ranking</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sample Preset Bar -->
+    <div id="sampleBar" class="bg-blue-50/70 border-b border-blue-100 py-2.5 px-4 sm:px-6">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2 text-blue-900 font-medium">
+                <i data-lucide="sparkles" class="w-4 h-4 text-blue-600"></i>
+                <span>Quick Test: Load Pre-configured Resume & Job Description Benchmarks:</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <select id="sampleSelector" class="bg-white border border-blue-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-pointer shadow-2xs">
+                    <option value="">-- Choose a benchmark scenario --</option>
+                    <option value="fullstack_alex">Full Stack: Senior Engineer vs Alex Turner (Strong Fit 76%)</option>
+                    <option value="datascience_sarah">AI & Data: Lead Data Scientist vs Sarah Chen (Strong Fit 72%)</option>
+                    <option value="devops_marcus">Cloud: DevOps Architect vs Marcus Vance (Strong Fit 77%)</option>
+                    <option value="junior_gap_test">Gap Test: Senior Role vs Jordan Lee (Junior Gap Benchmark 18%)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+
+        <!-- SINGLE MODE INPUT CONTAINER -->
+        <div id="singleInputsContainer" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Resume Input Box -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                            </div>
+                            <h2 class="font-bold text-slate-800 text-sm">1. Candidate Resume</h2>
+                        </div>
+                        <div class="bg-slate-100 p-0.5 rounded-lg flex text-xs">
+                            <button id="resumeToggleFile" class="px-3 py-1 rounded-md font-semibold text-blue-600 bg-white shadow-2xs transition-all">Upload File</button>
+                            <button id="resumeTogglePaste" class="px-3 py-1 rounded-md font-semibold text-slate-500 hover:text-slate-800 transition-all">Paste Text</button>
+                        </div>
+                    </div>
+
+                    <!-- File Drop Area -->
+                    <div id="resumeFileArea" class="flex-1 flex flex-col">
+                        <div id="resumeDropZone" class="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/30 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all flex-1 min-h-[220px]">
+                            <input type="file" id="resumeFileInput" class="hidden" accept=".pdf,.docx,.txt,.md">
+                            
+                            <div id="resumeDropContent" class="space-y-2">
+                                <div class="w-12 h-12 mx-auto rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                                    <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                                </div>
+                                <div class="text-sm font-semibold text-slate-800">Click to upload or drag & drop</div>
+                                <div class="text-2xs text-slate-400">PDF, DOCX, TXT, or Markdown (Max 10MB)</div>
+                            </div>
+
+                            <div id="resumeFileSelected" class="hidden space-y-2">
+                                <div class="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                    <i data-lucide="file-check" class="w-6 h-6"></i>
+                                </div>
+                                <div id="resumeFileName" class="text-sm font-bold text-slate-800 truncate max-w-xs"></div>
+                                <div class="text-2xs text-emerald-600 font-semibold">File loaded & ready for analysis</div>
+                                <button type="button" onclick="state.resumeFile=null; document.getElementById('resumeFileSelected').classList.add('hidden'); document.getElementById('resumeDropContent').classList.remove('hidden');" class="text-2xs text-rose-500 hover:underline">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paste Text Area -->
+                    <div id="resumePasteArea" class="hidden flex-1 flex flex-col">
+                        <textarea id="resumeTextArea" class="w-full flex-1 min-h-[220px] p-3 text-xs text-slate-800 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none" placeholder="Paste candidate resume text here (Summary, Experience, Skills, Education)..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Job Description Input Box -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                <i data-lucide="briefcase" class="w-4 h-4"></i>
+                            </div>
+                            <h2 class="font-bold text-slate-800 text-sm">2. Target Job Description</h2>
+                        </div>
+                        <div class="bg-slate-100 p-0.5 rounded-lg flex text-xs">
+                            <button id="jdTogglePaste" class="px-3 py-1 rounded-md font-semibold text-blue-600 bg-white shadow-2xs transition-all">Paste JD</button>
+                            <button id="jdToggleFile" class="px-3 py-1 rounded-md font-semibold text-slate-500 hover:text-slate-800 transition-all">Upload File</button>
+                        </div>
+                    </div>
+
+                    <!-- Paste JD Area -->
+                    <div id="jdPasteArea" class="flex-1 flex flex-col">
+                        <textarea id="jdTextArea" class="w-full flex-1 min-h-[220px] p-3 text-xs text-slate-800 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none" placeholder="Paste job description text here (Requirements, Responsibilities, Core Tech Stack, Experience needed)..."></textarea>
+                    </div>
+
+                    <!-- File Drop Area -->
+                    <div id="jdFileArea" class="hidden flex-1 flex flex-col">
+                        <div id="jdDropZone" class="border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-slate-50/50 hover:bg-indigo-50/30 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all flex-1 min-h-[220px]">
+                            <input type="file" id="jdFileInput" class="hidden" accept=".pdf,.docx,.txt,.md">
+                            
+                            <div id="jdDropContent" class="space-y-2">
+                                <div class="w-12 h-12 mx-auto rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                    <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                                </div>
+                                <div class="text-sm font-semibold text-slate-800">Upload Job Description Document</div>
+                                <div class="text-2xs text-slate-400">PDF, DOCX, TXT, or Markdown</div>
+                            </div>
+
+                            <div id="jdFileSelected" class="hidden space-y-2">
+                                <div class="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                    <i data-lucide="file-check" class="w-6 h-6"></i>
+                                </div>
+                                <div id="jdFileName" class="text-sm font-bold text-slate-800 truncate max-w-xs"></div>
+                                <div class="text-2xs text-emerald-600 font-semibold">Job description loaded</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Button -->
+            <div class="flex justify-center pt-2">
+                <button id="btnAnalyzeSingle" class="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2 transform hover:-translate-y-0.5">
+                    <i id="analyzeSpinner" data-lucide="loader-2" class="w-4 h-4 animate-spin hidden"></i>
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    <span id="analyzeBtnText">Match & Analyze Candidate</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- RECRUITER BATCH MODE INPUT CONTAINER -->
+        <div id="recruiterInputsContainer" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-6">
+                <div>
+                    <h2 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i data-lucide="layer" class="w-5 h-5 text-blue-600"></i>
+                        Recruiter Multi-Resume Batch Ranking
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">Upload candidate resumes (PDF, DOCX, TXT) and match all of them against your Job Description to produce an automated leaderboard.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Batch Upload Box -->
+                    <div class="flex flex-col">
+                        <label class="block text-xs font-bold text-slate-700 mb-2">1. Upload Resumes (Select Multiple)</label>
+                        <div id="batchDropZone" class="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all flex-1 min-h-[220px]">
+                            <input type="file" id="batchFileInput" class="hidden" multiple accept=".pdf,.docx,.txt,.md">
+                            <div class="w-12 h-12 mx-auto rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2">
+                                <i data-lucide="folder-up" class="w-6 h-6"></i>
+                            </div>
+                            <div class="text-sm font-semibold text-slate-800">Drop multiple resumes here</div>
+                            <div class="text-2xs text-slate-400 mt-1">Select 2 to 50 resumes at once</div>
+                            <span id="batchCountBadge" class="hidden mt-3 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">0 Ready</span>
+                        </div>
+                        <div id="batchFilesList" class="flex flex-wrap gap-2 mt-3 max-h-24 overflow-y-auto"></div>
+                    </div>
+
+                    <!-- Batch JD Box -->
+                    <div class="flex flex-col">
+                        <label class="block text-xs font-bold text-slate-700 mb-2">2. Target Job Description</label>
+                        <textarea id="batchJDTextArea" class="w-full flex-1 min-h-[220px] p-3 text-xs text-slate-800 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none" placeholder="Paste target job description to rank all candidates against..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-center pt-2">
+                    <button id="btnAnalyzeBatch" class="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2">
+                        <i data-lucide="trophy" class="w-4 h-4"></i>
+                        <span>Rank & Compare Candidates</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SINGLE RESULTS SECTION -->
+        <section id="singleResultsSection" class="hidden space-y-6 animate-fade-in">
+
+            <!-- Hero Overview Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:p-8">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    
+                    <!-- Candidate Info & Fit -->
+                    <div class="space-y-3 flex-1 text-center md:text-left">
+                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                            <span id="resFitTierBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                                <span id="resFitTier">Strong Match</span>
+                            </span>
+                            <span class="text-xs text-slate-400">|</span>
+                            <span class="text-xs text-slate-500 font-mono" id="resFileName">alex_turner_fullstack.txt</span>
+                        </div>
+                        <h2 id="resCandidateName" class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">Alex Turner</h2>
+                        <div class="flex items-center justify-center md:justify-start gap-2 text-sm font-semibold text-slate-700">
+                            <span class="text-slate-400">Verdict:</span>
+                            <span id="resVerdict" class="text-blue-600 font-bold">Strong Yes - Immediate Interview</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-2 no-print">
+                            <button id="btnDownloadPDF" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs transition-all">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Download PDF Report</span>
+                            </button>
+                            <button onclick="window.print()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all">
+                                <i data-lucide="printer" class="w-4 h-4"></i>
+                                <span>Print Audit</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Circular Progress Meter -->
+                    <div class="relative w-40 h-40 flex items-center justify-center shrink-0">
+                        <svg class="w-full h-full" viewBox="0 0 100 100">
+                            <circle class="text-slate-100" stroke-width="8" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50"/>
+                            <circle id="scoreCircle" class="circle-progress" stroke-width="8" stroke-linecap="round" stroke="#2563eb" fill="transparent" r="40" cx="50" cy="50"/>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <span id="overallScoreText" class="text-3xl font-extrabold text-slate-900">0%</span>
+                            <span class="text-2xs font-bold text-slate-400 uppercase tracking-wider">Overall Match</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Score Breakdown Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                        <span class="font-semibold">Skills Match</span>
+                        <span class="text-2xs text-slate-400 font-mono">45% weight</span>
+                    </div>
+                    <div id="scoreSkills" class="text-2xl font-bold text-slate-900">0%</div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-blue-600 h-full rounded-full" style="width: 78%;"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                        <span class="font-semibold">Semantic Fit</span>
+                        <span class="text-2xs text-slate-400 font-mono">25% weight</span>
+                    </div>
+                    <div id="scoreSemantic" class="text-2xl font-bold text-slate-900">0%</div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-indigo-600 h-full rounded-full" style="width: 60%;"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                        <span class="font-semibold">Experience Fit</span>
+                        <span class="text-2xs text-slate-400 font-mono">15% weight</span>
+                    </div>
+                    <div id="scoreExp" class="text-2xl font-bold text-slate-900">0%</div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-emerald-600 h-full rounded-full" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                        <span class="font-semibold">ATS Formatting</span>
+                        <span class="text-2xs text-slate-400 font-mono">15% weight</span>
+                    </div>
+                    <div id="scoreATS" class="text-2xl font-bold text-slate-900">0%</div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-purple-600 h-full rounded-full" style="width: 95%;"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Radar Chart & Candidate Attributes Side-by-Side -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Radar Chart -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i data-lucide="radar" class="w-4 h-4 text-blue-600"></i>
+                            Candidate Competency Radar
+                        </h3>
+                        <span class="text-2xs font-semibold text-slate-400">Benchmark against JD requirements</span>
+                    </div>
+                    <div class="h-64 relative flex items-center justify-center">
+                        <canvas id="radarChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Candidate Extracted Profile Details -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <i data-lucide="user-check" class="w-4 h-4 text-emerald-600"></i>
+                        Parsed Candidate Credentials & ATS Metrics
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 bg-slate-50 rounded-lg">
+                            <span class="text-slate-400 block text-2xs uppercase font-bold">Email</span>
+                            <span id="metaEmail" class="font-semibold text-slate-800 break-all">candidate@email.com</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg">
+                            <span class="text-slate-400 block text-2xs uppercase font-bold">Phone</span>
+                            <span id="metaPhone" class="font-semibold text-slate-800">+1 (555) 123-4567</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg">
+                            <span class="text-slate-400 block text-2xs uppercase font-bold">Experience Tenure</span>
+                            <span id="metaExpYears" class="font-semibold text-slate-800">6 years (Job asks 5+)</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg">
+                            <span class="text-slate-400 block text-2xs uppercase font-bold">Seniority Level</span>
+                            <span id="metaSeniority" class="font-semibold text-slate-800">Senior</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 font-medium">Links & Portfolios:</span>
+                        <div id="metaLinks" class="font-medium"></div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-blue-50/50 p-2 rounded-lg">
+                            <span class="text-2xs text-blue-600 font-bold block uppercase">Word Count</span>
+                            <span id="metaWordCount" class="font-bold text-slate-800 text-sm">480</span>
+                        </div>
+                        <div class="bg-emerald-50/50 p-2 rounded-lg">
+                            <span class="text-2xs text-emerald-600 font-bold block uppercase">Action Verbs</span>
+                            <span id="metaActionVerbs" class="font-bold text-slate-800 text-sm">18</span>
+                        </div>
+                        <div class="bg-indigo-50/50 p-2 rounded-lg">
+                            <span class="text-2xs text-indigo-600 font-bold block uppercase">Metrics & Numbers</span>
+                            <span id="metaMetricsCount" class="font-bold text-slate-800 text-sm">8</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Skills Audit Section (Matched & Missing Skills) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                            <i data-lucide="layers" class="w-5 h-5 text-blue-600"></i>
+                            Skills & Competency Gap Analysis
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Identifies critical skills missing from candidate resume compared directly against the JD.</p>
+                    </div>
+                    <button id="btnCopyMissingSkills" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shadow-2xs">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>Copy Missing Skills</span>
+                    </button>
+                </div>
+
+                <!-- Critical Missing Skills Alert Box -->
+                <div class="p-4 bg-rose-50/70 border border-rose-200 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-rose-800 font-bold text-xs uppercase tracking-wider">
+                            <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-600"></i>
+                            <span>Critical Missing Skills (High Frequency in JD)</span>
+                        </div>
+                        <span id="critMissingCount" class="px-2 py-0.5 bg-rose-200 text-rose-800 rounded text-2xs font-bold">0</span>
+                    </div>
+                    <div id="criticalMissingContainer" class="flex flex-wrap gap-2 pt-1"></div>
+                </div>
+
+                <!-- Matched Skills Box -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-emerald-800 font-bold text-xs uppercase tracking-wider">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                            <span>Matched Skills in Resume</span>
+                        </div>
+                        <span id="matchedCount" class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-2xs font-bold">0</span>
+                    </div>
+                    <div id="matchedSkillsContainer" class="flex flex-wrap gap-2 pt-1"></div>
+                </div>
+
+                <!-- All Missing Skills Box -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 text-slate-600 font-bold text-xs uppercase tracking-wider">
+                            <i data-lucide="help-circle" class="w-4 h-4 text-slate-400"></i>
+                            <span>All Missing Requirements & Nice-to-Haves</span>
+                        </div>
+                        <span id="allMissingCount" class="px-2 py-0.5 bg-slate-200 text-slate-800 rounded text-2xs font-bold">0</span>
+                    </div>
+                    <div id="allMissingContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
+                </div>
+
+                <!-- Candidate Extra Skills -->
+                <div class="space-y-2 pt-3 border-t border-slate-100">
+                    <span class="text-2xs font-bold text-slate-400 uppercase tracking-wider block">Additional Candidate Skills (Beyond Job Spec)</span>
+                    <div id="extraSkillsContainer" class="flex flex-wrap gap-1.5"></div>
+                </div>
+            </div>
+
+            <!-- Actionable Suggestions -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i data-lucide="compass" class="w-5 h-5 text-indigo-600"></i>
+                        Actionable ATS Optimization Plan
+                    </h3>
+                    <span class="text-2xs text-slate-400 font-semibold">Prioritized Resume Recommendations</span>
+                </div>
+                <div id="suggestionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+            </div>
+
+            <!-- AI Interactive Copilot Section (Bullet Enhancer & Interview Prep) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
+                
+                <!-- Bullet Point AI Enhancer -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 flex flex-col space-y-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-blue-600"></i>
+                            Google XYZ Bullet Point Enhancer
+                        </h3>
+                        <p class="text-2xs text-slate-500 mt-0.5">Transform weak resume bullets into high-impact, metric-driven accomplishments.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <input id="inputBulletText" type="text" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. Worked on optimizing backend APIs and databases" value="Worked on optimizing backend APIs and databases">
+                        <input id="inputBulletSkill" type="text" class="w-full p-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Target skill to highlight (optional, e.g. FastAPI, PostgreSQL)">
+                    </div>
+
+                    <button id="btnEnhanceBullet" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>Optimize Bullet Point</span>
+                    </button>
+
+                    <div id="bulletVariationsContainer" class="space-y-2 hidden"></div>
+                </div>
+
+                <!-- Interview Prep Generator -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 flex flex-col space-y-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i data-lucide="message-square" class="w-4 h-4 text-indigo-600"></i>
+                            Tailored Interview Prep Copilot
+                        </h3>
+                        <p class="text-2xs text-slate-500 mt-0.5">Generate technical & behavioral interview questions based on candidate strengths and gaps.</p>
+                    </div>
+
+                    <p class="text-xs text-slate-600 leading-relaxed">Prepare the candidate or interviewer with customized questions focused on matched core technologies and addressing critical skill gaps.</p>
+
+                    <button id="btnGenInterview" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="message-square" class="w-4 h-4"></i>
+                        <span>Generate Interview Questions</span>
+                    </button>
+
+                    <div id="interviewQuestionsList" class="space-y-2 hidden max-h-72 overflow-y-auto"></div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- RECRUITER BATCH RESULTS LEADERBOARD -->
+        <section id="recruiterResultsSection" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="font-bold text-slate-900 text-lg">Candidate Ranking Leaderboard</h2>
+                            <span id="batchLeaderboardTotal" class="px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">0 Evaluated</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">Candidates ranked dynamically by weighted match score against the target Job Description.</p>
+                    </div>
+
+                    <div class="w-full sm:w-64">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                            <input type="text" id="batchSearchInput" class="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Search candidate or skill...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider text-2xs">
+                                <th class="py-3 px-4 text-center">Rank</th>
+                                <th class="py-3 px-4">Candidate Name</th>
+                                <th class="py-3 px-4 text-center">Overall</th>
+                                <th class="py-3 px-4 text-center">Skills</th>
+                                <th class="py-3 px-4 text-center">ATS Format</th>
+                                <th class="py-3 px-4 text-center">Tier</th>
+                                <th class="py-3 px-4">Top Matched</th>
+                                <th class="py-3 px-4">Critical Missing</th>
+                                <th class="py-3 px-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batchLeaderboardBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>AI Resume Analyzer &bull; Smart ATS Scoring Engine</div>
+            <div class="flex items-center gap-4 text-2xs text-slate-400">
+                <span>100% Offline Capable</span>
+                <span>•</span>
+                <span>PDF, DOCX & TXT Support</span>
+                <span>•</span>
+                <span>Built-in 1,000+ Skill Taxonomy</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- App Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
