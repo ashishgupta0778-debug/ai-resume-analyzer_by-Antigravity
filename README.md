@@ -1,8 +1,13 @@
 # AI Resume Analyzer & Smart ATS Scoring System 🎯
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://ai-resume-analyzer-zs7w.onrender.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ashishgupta0778-debug/ai-resume-analyzer_by-Antigravity)
 
 An intelligent, production-ready AI Resume Analyzer that parses resumes, matches them against job descriptions, computes weighted ATS candidate scores, identifies missing critical skills, and provides actionable resume optimization recommendations.
+
+🌐 **Live Application**: [https://ai-resume-analyzer-zs7w.onrender.com](https://ai-resume-analyzer-zs7w.onrender.com)
 
 ---
 
