@@ -466,12 +466,12 @@ function renderRadarChart(scores) {
                     scores.ats_formatting_score || 0,
                     Math.min(100, (scores.skills_score + scores.ats_formatting_score) / 2)
                 ],
-                backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                borderColor: 'rgba(59, 130, 246, 0.9)',
-                pointBackgroundColor: '#2563eb',
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: '#2563eb',
+                backgroundColor: 'rgba(99, 102, 241, 0.22)',
+                borderColor: '#6366f1',
+                pointBackgroundColor: '#4f46e5',
+                pointBorderColor: '#ffffff',
+                pointHoverBackgroundColor: '#ffffff',
+                pointHoverBorderColor: '#4f46e5',
                 borderWidth: 2.5
             }]
         },
@@ -480,11 +480,11 @@ function renderRadarChart(scores) {
             maintainAspectRatio: false,
             scales: {
                 r: {
-                    angleLines: { color: 'rgba(226, 232, 240, 0.8)' },
-                    grid: { color: 'rgba(226, 232, 240, 0.8)' },
+                    angleLines: { color: 'rgba(226, 232, 240, 0.9)' },
+                    grid: { color: 'rgba(226, 232, 240, 0.9)' },
                     pointLabels: {
-                        font: { size: 11, family: "'Plus Jakarta Sans', sans-serif", weight: '600' },
-                        color: '#475569'
+                        font: { size: 11, family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+                        color: '#334155'
                     },
                     suggestedMin: 0,
                     suggestedMax: 100,
@@ -513,11 +513,11 @@ function renderSkillsAudit(skills) {
     critContainer.innerHTML = '';
     const critList = skills.critical_missing_skills || [];
     if (critList.length === 0) {
-        critContainer.innerHTML = '<span class="text-xs text-emerald-600 font-medium">None! All high-priority JD skills matched.</span>';
+        critContainer.innerHTML = '<span class="text-xs text-emerald-600 font-bold flex items-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4"></i> None! All high-priority JD skills matched perfectly.</span>';
     } else {
         critList.forEach(skill => {
             const pill = document.createElement('span');
-            pill.className = 'inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-md text-xs font-semibold shadow-2xs hover:bg-rose-100 transition-colors';
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-rose-700 border-2 border-rose-200 rounded-xl text-xs font-bold shadow-xs hover:border-rose-400 hover:bg-rose-50/50 transition-all';
             pill.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-500"></i> ${skill}`;
             critContainer.appendChild(pill);
         });
@@ -531,7 +531,7 @@ function renderSkillsAudit(skills) {
     } else {
         allMiss.forEach(skill => {
             const pill = document.createElement('span');
-            pill.className = 'inline-flex items-center px-2.5 py-1 bg-red-50 text-red-600 border border-red-100 rounded-md text-xs font-medium';
+            pill.className = 'inline-flex items-center px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg text-xs font-medium hover:border-slate-400 hover:bg-slate-50 transition-all';
             pill.textContent = skill;
             allMissingContainer.appendChild(pill);
         });
@@ -542,8 +542,8 @@ function renderSkillsAudit(skills) {
     const matched = skills.matched_skills || [];
     matched.forEach(skill => {
         const pill = document.createElement('span');
-        pill.className = 'inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-xs font-medium shadow-2xs';
-        pill.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> ${skill}`;
+        pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-emerald-700 border-2 border-emerald-200 rounded-xl text-xs font-bold shadow-xs hover:border-emerald-400 hover:bg-emerald-50/50 transition-all';
+        pill.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> ${skill}`;
         matchedContainer.appendChild(pill);
     });
 
@@ -552,7 +552,7 @@ function renderSkillsAudit(skills) {
     const extra = skills.extra_skills || [];
     extra.forEach(skill => {
         const pill = document.createElement('span');
-        pill.className = 'inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs';
+        pill.className = 'inline-flex items-center px-2.5 py-1 bg-white text-purple-700 border border-purple-200 rounded-lg text-xs font-semibold shadow-2xs hover:bg-purple-50/50 transition-all';
         pill.textContent = skill;
         extraContainer.appendChild(pill);
     });
@@ -563,24 +563,25 @@ function renderSuggestions(suggestions) {
     container.innerHTML = '';
 
     if (!suggestions || suggestions.length === 0) {
-        container.innerHTML = '<div class="text-sm text-slate-500">No major optimization issues detected. Excellent resume alignment!</div>';
+        container.innerHTML = '<div class="text-sm text-emerald-600 font-semibold p-4 bg-emerald-50 rounded-xl border border-emerald-200">No major optimization issues detected. Excellent resume alignment!</div>';
         return;
     }
 
     suggestions.forEach(item => {
-        const borderCol = item.type === 'critical' ? 'border-rose-400 bg-rose-50/50' :
-                          item.type === 'warning' ? 'border-amber-400 bg-amber-50/50' : 'border-blue-400 bg-blue-50/50';
-        const iconCol = item.type === 'critical' ? 'text-rose-600' :
-                        item.type === 'warning' ? 'text-amber-600' : 'text-blue-600';
+        const borderCol = item.type === 'critical' ? 'border-l-4 border-l-rose-500 border-rose-200 bg-gradient-to-r from-rose-50/90 via-red-50/40 to-white' :
+                          item.type === 'warning' ? 'border-l-4 border-l-amber-500 border-amber-200 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-white' : 
+                          'border-l-4 border-l-blue-500 border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white';
+        const iconBg = item.type === 'critical' ? 'bg-rose-100 text-rose-600' :
+                       item.type === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600';
 
         const div = document.createElement('div');
-        div.className = `p-4 rounded-xl border-l-4 border ${borderCol} flex gap-3.5 shadow-2xs`;
+        div.className = `p-4 rounded-xl border ${borderCol} flex gap-3.5 shadow-xs card-hover-lift`;
         div.innerHTML = `
-            <div class="${iconCol} mt-0.5">
-                <i data-lucide="${item.icon || 'info'}" class="w-5 h-5"></i>
+            <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="${item.icon || 'info'}" class="w-4 h-4"></i>
             </div>
             <div>
-                <h4 class="text-sm font-bold text-slate-900">${item.title}</h4>
+                <h4 class="text-xs font-bold text-slate-900">${item.title}</h4>
                 <p class="text-xs text-slate-600 mt-1 leading-relaxed">${item.message}</p>
             </div>
         `;
@@ -633,22 +634,29 @@ async function handleEnhanceBullet() {
         const data = await res.json();
         
         resultsContainer.innerHTML = '';
+        const optThemes = [
+            { border: 'border-blue-200', bg: 'bg-gradient-to-br from-blue-50/70 via-white to-cyan-50/30', badge: 'bg-blue-100 text-blue-800 border-blue-200', title: 'Option 1 • High Metric Focus' },
+            { border: 'border-indigo-200', bg: 'bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/30', badge: 'bg-indigo-100 text-indigo-800 border-indigo-200', title: 'Option 2 • Architecture & Scale' },
+            { border: 'border-purple-200', bg: 'bg-gradient-to-br from-purple-50/70 via-white to-pink-50/30', badge: 'bg-purple-100 text-purple-800 border-purple-200', title: 'Option 3 • Speed & Efficiency' }
+        ];
+
         data.variations.forEach((varText, idx) => {
+            const theme = optThemes[idx % optThemes.length];
             const card = document.createElement('div');
-            card.className = 'p-3 bg-white border border-slate-200 rounded-lg shadow-2xs hover:border-blue-400 transition-colors group relative';
+            card.className = `p-3.5 ${theme.bg} border-2 ${theme.border} rounded-xl shadow-xs hover:shadow-md transition-all group relative`;
             card.innerHTML = `
-                <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-xs font-bold text-blue-700">Formula Option ${idx + 1}</span>
-                    <button class="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1 font-medium copy-btn">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-2xs font-extrabold px-2.5 py-0.5 rounded-full border ${theme.badge}">${theme.title}</span>
+                    <button class="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1 font-semibold copy-btn bg-white px-2 py-0.5 rounded border border-slate-200 shadow-2xs">
                         <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
                     </button>
                 </div>
-                <p class="text-xs text-slate-700 leading-relaxed">${varText}</p>
+                <p class="text-xs text-slate-800 leading-relaxed font-medium">${varText}</p>
             `;
             // Copy click handler
             card.querySelector('.copy-btn').addEventListener('click', () => {
                 navigator.clipboard.writeText(varText);
-                card.querySelector('.copy-btn').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Copied`;
+                card.querySelector('.copy-btn').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Copied!`;
                 initLucide();
             });
             resultsContainer.appendChild(card);
@@ -800,49 +808,60 @@ function renderBatchLeaderboard(candidates) {
 
     candidates.forEach((cand, idx) => {
         const tr = document.createElement('tr');
-        tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors';
+        tr.className = 'border-b border-slate-100 hover:bg-indigo-50/30 transition-colors';
 
-        const tierBadgeClass = cand.fit_tier === 'Exceptional Match' ? 'bg-emerald-100 text-emerald-800' :
-                               cand.fit_tier === 'Strong Match' ? 'bg-blue-100 text-blue-800' :
-                               cand.fit_tier === 'Moderate Match' ? 'bg-amber-100 text-amber-800' :
-                               'bg-rose-100 text-rose-800';
+        const tierBadgeClass = cand.fit_tier === 'Exceptional Match' ? 'bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-900 border border-emerald-300' :
+                               cand.fit_tier === 'Strong Match' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-900 border border-blue-300' :
+                               cand.fit_tier === 'Moderate Match' ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-900 border border-amber-300' :
+                               'bg-gradient-to-r from-rose-100 to-red-100 text-rose-900 border border-rose-300';
 
         const matchedTop = (cand.skills_analysis?.matched_skills || []).slice(0, 3).join(', ');
         const missingCrit = (cand.skills_analysis?.critical_missing_skills || []).slice(0, 2).join(', ');
 
+        let rankBadge = `#${idx + 1}`;
+        if (idx === 0) {
+            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-100 to-yellow-200 text-amber-900 border border-amber-300 font-black text-xs shadow-2xs">🥇 #1</span>`;
+        } else if (idx === 1) {
+            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-gradient-to-r from-slate-100 to-slate-200 text-slate-800 border border-slate-300 font-black text-xs shadow-2xs">🥈 #2</span>`;
+        } else if (idx === 2) {
+            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-100 to-amber-100 text-orange-900 border border-orange-300 font-black text-xs shadow-2xs">🥉 #3</span>`;
+        } else {
+            rankBadge = `<span class="font-bold text-slate-500">#${idx + 1}</span>`;
+        }
+
         tr.innerHTML = `
-            <td class="py-3 px-4 text-center font-bold text-slate-800">#${idx + 1}</td>
-            <td class="py-3 px-4 font-semibold text-slate-900">
+            <td class="py-3 px-4 text-center font-bold text-slate-800">${rankBadge}</td>
+            <td class="py-3 px-4 font-bold text-slate-900">
                 ${cand.candidate_name}
                 <div class="text-2xs text-slate-400 font-normal truncate max-w-[140px]">${cand.filename}</div>
             </td>
             <td class="py-3 px-4 text-center">
-                <span class="inline-block px-2.5 py-1 font-bold text-sm rounded-lg ${
-                    cand.overall_score >= 70 ? 'text-emerald-700 bg-emerald-50' :
-                    cand.overall_score >= 50 ? 'text-amber-700 bg-amber-50' : 'text-rose-700 bg-rose-50'
+                <span class="inline-block px-2.5 py-1 font-black text-xs rounded-lg shadow-2xs ${
+                    cand.overall_score >= 70 ? 'text-emerald-800 bg-emerald-100 border border-emerald-200' :
+                    cand.overall_score >= 50 ? 'text-amber-800 bg-amber-100 border border-amber-200' : 'text-rose-800 bg-rose-100 border border-rose-200'
                 }">
                     ${cand.overall_score}%
                 </span>
             </td>
-            <td class="py-3 px-4 text-center text-xs text-slate-700 font-medium">${cand.scores?.skills_score}%</td>
-            <td class="py-3 px-4 text-center text-xs text-slate-700 font-medium">${cand.scores?.ats_formatting_score}%</td>
+            <td class="py-3 px-4 text-center text-xs text-blue-700 font-bold">${cand.scores?.skills_score}%</td>
+            <td class="py-3 px-4 text-center text-xs text-amber-700 font-bold">${cand.scores?.ats_formatting_score}%</td>
             <td class="py-3 px-4 text-center">
-                <span class="inline-block text-2xs px-2 py-0.5 rounded font-semibold ${tierBadgeClass}">
+                <span class="inline-block text-2xs px-2.5 py-0.5 rounded-full font-bold shadow-2xs ${tierBadgeClass}">
                     ${cand.fit_tier}
                 </span>
             </td>
             <td class="py-3 px-4 text-xs text-slate-600">
                 <div class="truncate max-w-[170px]" title="${matchedTop}">
-                    <span class="text-emerald-600 font-medium">✓</span> ${matchedTop || 'None'}
+                    <span class="text-emerald-600 font-bold">✓</span> ${matchedTop || 'None'}
                 </div>
             </td>
             <td class="py-3 px-4 text-xs text-slate-600">
-                <div class="truncate max-w-[170px] text-rose-600" title="${missingCrit}">
-                    ${missingCrit ? '✗ ' + missingCrit : '<span class="text-emerald-600">None</span>'}
+                <div class="truncate max-w-[170px] text-rose-600 font-medium" title="${missingCrit}">
+                    ${missingCrit ? '✗ ' + missingCrit : '<span class="text-emerald-600 font-bold">None</span>'}
                 </div>
             </td>
             <td class="py-3 px-4 text-center">
-                <button class="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 rounded text-blue-600 hover:bg-blue-50 transition-colors view-candidate-btn" data-index="${idx}">
+                <button class="px-3 py-1 text-xs font-bold bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-blue-700 hover:from-blue-600 hover:to-indigo-600 hover:text-white transition-all shadow-2xs view-candidate-btn" data-index="${idx}">
                     Inspect
                 </button>
             </td>
