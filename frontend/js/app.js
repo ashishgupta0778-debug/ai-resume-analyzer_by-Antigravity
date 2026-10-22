@@ -1,12 +1,13 @@
 /**
- * AI Resume Analyzer Client Application
- * Handles file uploads, sample presets, REST requests, Chart.js radar charts,
- * batch recruiter leaderboard, and AI interactive tools.
+ * TalentScan AI - Modern Application Controller
+ * Handles Studio split-view workspace, Navigation Views, Theme switching,
+ * REST API interactions, Chart.js radar charts, Recruiter Leaderboard, and AI tools.
  */
 
 // Application State
 const state = {
-    mode: 'single', // 'single' or 'recruiter'
+    currentView: 'studio',
+    theme: 'dark',
     resumeFile: null,
     resumeText: '',
     jdFile: null,
@@ -18,9 +19,11 @@ const state = {
     chartInstance: null
 };
 
-// DOM Content Loaded
+// Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initLucide();
+    initNavigation();
     initEventListeners();
     fetchSamples();
 });
@@ -31,7 +34,98 @@ function initLucide() {
     }
 }
 
-// Fetch Sample Library for 1-Click Demos
+// Dark / Light Theme Management
+function initTheme() {
+    const savedTheme = localStorage.getItem('talentscan_theme') || 'dark';
+    setTheme(savedTheme);
+
+    document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+        const newTheme = state.theme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    });
+}
+
+function setTheme(theme) {
+    state.theme = theme;
+    localStorage.setItem('talentscan_theme', theme);
+
+    const html = document.documentElement;
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+
+    if (theme === 'dark') {
+        html.classList.add('dark');
+        if (themeIcon) themeIcon.setAttribute('data-lucide', 'sun');
+        if (themeText) themeText.textContent = 'Light Theme';
+    } else {
+        html.classList.remove('dark');
+        if (themeIcon) themeIcon.setAttribute('data-lucide', 'moon');
+        if (themeText) themeText.textContent = 'Dark Theme';
+    }
+
+    if (state.chartInstance && state.lastAnalysis) {
+        renderRadarChart(state.lastAnalysis.scores);
+    }
+    initLucide();
+}
+
+// Navigation between views
+function initNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = btn.getAttribute('data-view');
+            if (view) switchView(view);
+        });
+    });
+
+    document.getElementById('btnSidebarNewAnalysis')?.addEventListener('click', () => {
+        switchView('studio');
+        resetStudioInputs();
+    });
+}
+
+function switchView(viewId) {
+    state.currentView = viewId;
+
+    // Update sidebar navigation buttons
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        const matches = btn.getAttribute('data-view') === viewId;
+        if (matches) {
+            btn.className = 'nav-item active w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800/60 shadow-xs';
+        } else {
+            btn.className = 'nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900';
+        }
+    });
+
+    // Update Header Title
+    const titles = {
+        studio: { text: 'Resume Match Studio', icon: 'file-search' },
+        recruiter: { text: 'Recruiter Leaderboard', icon: 'users' },
+        enhancer: { text: 'Bullet Point Lab (XYZ)', icon: 'sparkles' },
+        interview: { text: 'Interview Copilot', icon: 'message-square' },
+        taxonomy: { text: '1,000+ Skill Taxonomy', icon: 'database' }
+    };
+    const t = titles[viewId] || titles.studio;
+    const titleEl = document.getElementById('headerBreadcrumbTitle');
+    if (titleEl) {
+        titleEl.innerHTML = `<i data-lucide="${t.icon}" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400"></i> ${t.text}`;
+    }
+
+    // Toggle active view container
+    document.querySelectorAll('.app-view').forEach(viewEl => {
+        viewEl.classList.add('hidden');
+    });
+
+    const targetEl = document.getElementById('view' + viewId.charAt(0).toUpperCase() + viewId.slice(1));
+    if (targetEl) {
+        targetEl.classList.remove('hidden');
+    }
+
+    initLucide();
+}
+
+// Fetch Sample Library
 async function fetchSamples() {
     try {
         const res = await fetch('/api/samples');
@@ -43,15 +137,49 @@ async function fetchSamples() {
     }
 }
 
+// One-Click Scenario Loader
+async function loadSampleScenario(key) {
+    if (!state.samples) {
+        await fetchSamples();
+    }
+    if (!state.samples) return;
+
+    switchView('studio');
+
+    let jdKey = 'senior_fullstack_engineer';
+    let resKey = 'alex_turner_fullstack';
+
+    if (key === 'fullstack_alex') {
+        jdKey = 'senior_fullstack_engineer';
+        resKey = 'alex_turner_fullstack';
+    } else if (key === 'datascience_sarah') {
+        jdKey = 'lead_data_scientist';
+        resKey = 'sarah_chen_datascience';
+    } else if (key === 'devops_marcus') {
+        jdKey = 'devops_cloud_architect';
+        resKey = 'marcus_vance_devops';
+    } else if (key === 'junior_gap_test') {
+        jdKey = 'senior_fullstack_engineer';
+        resKey = 'jordan_lee_junior_dev';
+    }
+
+    const jdText = state.samples.job_descriptions[jdKey]?.content;
+    const resText = state.samples.resumes[resKey]?.content;
+
+    if (jdText && resText) {
+        setResumeInputType('paste');
+        setJDInputType('paste');
+
+        document.getElementById('resumeTextArea').value = resText;
+        document.getElementById('jdTextArea').value = jdText;
+
+        showToast('Sample Loaded', `Testing ${resKey.replace(/_/g, ' ')}...`, 'info');
+        runSingleAnalysis();
+    }
+}
+
 // Event Listeners
 function initEventListeners() {
-    // Mode Switcher
-    const singleTab = document.getElementById('singleModeTab');
-    const recruiterTab = document.getElementById('recruiterModeTab');
-    
-    singleTab?.addEventListener('click', () => switchMode('single'));
-    recruiterTab?.addEventListener('click', () => switchMode('recruiter'));
-
     // Resume Input Toggle (File vs Paste)
     document.getElementById('resumeToggleFile')?.addEventListener('click', () => setResumeInputType('file'));
     document.getElementById('resumeTogglePaste')?.addEventListener('click', () => setResumeInputType('paste'));
@@ -60,62 +188,29 @@ function initEventListeners() {
     document.getElementById('jdTogglePaste')?.addEventListener('click', () => setJDInputType('paste'));
     document.getElementById('jdToggleFile')?.addEventListener('click', () => setJDInputType('file'));
 
-    // Drag and Drop: Single Resume
+    // Dropzones
     setupDropZone('resumeDropZone', 'resumeFileInput', handleResumeFileSelect);
-    // Drag and Drop: JD
     setupDropZone('jdDropZone', 'jdFileInput', handleJDFileSelect);
-    // Drag and Drop: Batch Resumes
     setupDropZone('batchDropZone', 'batchFileInput', handleBatchFilesSelect);
 
-    // Analyze Buttons
+    // Analyze Action Buttons
     document.getElementById('btnAnalyzeSingle')?.addEventListener('click', runSingleAnalysis);
     document.getElementById('btnAnalyzeBatch')?.addEventListener('click', runBatchAnalysis);
 
-    // Sample Preset Dropdown
-    document.getElementById('sampleSelector')?.addEventListener('change', loadSelectedSample);
-
-    // AI Bullet Enhancer
+    // AI Tools
     document.getElementById('btnEnhanceBullet')?.addEventListener('click', handleEnhanceBullet);
-
-    // AI Interview Prep
     document.getElementById('btnGenInterview')?.addEventListener('click', handleGenInterviewPrep);
 
-    // PDF Export
-    document.getElementById('btnDownloadPDF')?.addEventListener('click', downloadCurrentReportPDF);
+    // Top Actions
+    document.getElementById('btnTopDownloadPDF')?.addEventListener('click', downloadCurrentReportPDF);
+    document.getElementById('btnTopPrint')?.addEventListener('click', () => window.print());
+    document.getElementById('btnTopReset')?.addEventListener('click', resetStudioInputs);
 
     // Copy Missing Skills
     document.getElementById('btnCopyMissingSkills')?.addEventListener('click', copyMissingSkillsToClipboard);
 
-    // Batch Table Filter Search
+    // Batch Search
     document.getElementById('batchSearchInput')?.addEventListener('input', filterBatchLeaderboard);
-}
-
-// Mode Switcher
-function switchMode(newMode) {
-    state.mode = newMode;
-    const singleTab = document.getElementById('singleModeTab');
-    const recruiterTab = document.getElementById('recruiterModeTab');
-    const singleInputs = document.getElementById('singleInputsContainer');
-    const recruiterInputs = document.getElementById('recruiterInputsContainer');
-    const singleResults = document.getElementById('singleResultsSection');
-    const recruiterResults = document.getElementById('recruiterResultsSection');
-
-    if (newMode === 'single') {
-        singleTab.className = 'px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-blue-600 text-white';
-        recruiterTab.className = 'px-5 py-2.5 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100';
-        singleInputs.classList.remove('hidden');
-        recruiterInputs.classList.add('hidden');
-        if (state.lastAnalysis) singleResults.classList.remove('hidden');
-        recruiterResults.classList.add('hidden');
-    } else {
-        recruiterTab.className = 'px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-blue-600 text-white';
-        singleTab.className = 'px-5 py-2.5 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100';
-        singleInputs.classList.add('hidden');
-        recruiterInputs.classList.remove('hidden');
-        singleResults.classList.add('hidden');
-        if (state.lastBatchResults) recruiterResults.classList.remove('hidden');
-    }
-    initLucide();
 }
 
 function setResumeInputType(type) {
@@ -127,17 +222,13 @@ function setResumeInputType(type) {
     if (type === 'file') {
         fileArea.classList.remove('hidden');
         pasteArea.classList.add('hidden');
-        btnFile.classList.add('bg-white', 'shadow-xs', 'text-blue-600');
-        btnFile.classList.remove('text-slate-500');
-        btnPaste.classList.remove('bg-white', 'shadow-xs', 'text-blue-600');
-        btnPaste.classList.add('text-slate-500');
+        btnFile.className = 'px-2.5 py-1 rounded-md font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 shadow-2xs transition-all';
+        btnPaste.className = 'px-2.5 py-1 rounded-md font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all';
     } else {
         fileArea.classList.add('hidden');
         pasteArea.classList.remove('hidden');
-        btnPaste.classList.add('bg-white', 'shadow-xs', 'text-blue-600');
-        btnPaste.classList.remove('text-slate-500');
-        btnFile.classList.remove('bg-white', 'shadow-xs', 'text-blue-600');
-        btnFile.classList.add('text-slate-500');
+        btnPaste.className = 'px-2.5 py-1 rounded-md font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 shadow-2xs transition-all';
+        btnFile.className = 'px-2.5 py-1 rounded-md font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all';
     }
 }
 
@@ -150,18 +241,36 @@ function setJDInputType(type) {
     if (type === 'paste') {
         pasteArea.classList.remove('hidden');
         fileArea.classList.add('hidden');
-        btnPaste.classList.add('bg-white', 'shadow-xs', 'text-blue-600');
-        btnPaste.classList.remove('text-slate-500');
-        btnFile.classList.remove('bg-white', 'shadow-xs', 'text-blue-600');
-        btnFile.classList.add('text-slate-500');
+        btnPaste.className = 'px-2.5 py-1 rounded-md font-bold text-purple-600 dark:text-purple-400 bg-white dark:bg-slate-900 shadow-2xs transition-all';
+        btnFile.className = 'px-2.5 py-1 rounded-md font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all';
     } else {
         pasteArea.classList.add('hidden');
         fileArea.classList.remove('hidden');
-        btnFile.classList.add('bg-white', 'shadow-xs', 'text-blue-600');
-        btnFile.classList.remove('text-slate-500');
-        btnPaste.classList.remove('bg-white', 'shadow-xs', 'text-blue-600');
-        btnPaste.classList.add('text-slate-500');
+        btnFile.className = 'px-2.5 py-1 rounded-md font-bold text-purple-600 dark:text-purple-400 bg-white dark:bg-slate-900 shadow-2xs transition-all';
+        btnPaste.className = 'px-2.5 py-1 rounded-md font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all';
     }
+}
+
+function resetStudioInputs() {
+    state.resumeFile = null;
+    state.jdFile = null;
+    state.lastAnalysis = null;
+
+    document.getElementById('resumeTextArea').value = '';
+    document.getElementById('jdTextArea').value = '';
+
+    document.getElementById('resumeFileSelected')?.classList.add('hidden');
+    document.getElementById('resumeDropContent')?.classList.remove('hidden');
+    document.getElementById('jdFileSelected')?.classList.add('hidden');
+    document.getElementById('jdDropContent')?.classList.remove('hidden');
+
+    document.getElementById('studioEmptyState')?.classList.remove('hidden');
+    document.getElementById('studioResultsCanvas')?.classList.add('hidden');
+
+    document.getElementById('btnTopDownloadPDF')?.classList.add('hidden');
+    document.getElementById('btnTopPrint')?.classList.add('hidden');
+
+    showToast('Reset Complete', 'Studio inputs cleared.', 'info');
 }
 
 // Drag & Drop Setup
@@ -203,6 +312,7 @@ function handleResumeFileSelect(files) {
     document.getElementById('resumeFileName').textContent = file.name;
     document.getElementById('resumeFileSelected').classList.remove('hidden');
     document.getElementById('resumeDropContent').classList.add('hidden');
+    showToast('File Attached', file.name, 'success');
 }
 
 function handleJDFileSelect(files) {
@@ -212,84 +322,42 @@ function handleJDFileSelect(files) {
     document.getElementById('jdFileName').textContent = file.name;
     document.getElementById('jdFileSelected').classList.remove('hidden');
     document.getElementById('jdDropContent').classList.add('hidden');
+    showToast('JD Attached', file.name, 'success');
 }
 
 function handleBatchFilesSelect(files) {
     state.batchFiles = Array.from(files);
     const container = document.getElementById('batchFilesList');
     container.innerHTML = '';
-    
-    document.getElementById('batchCountBadge').textContent = `${state.batchFiles.length} Resumes Ready`;
-    document.getElementById('batchCountBadge').classList.remove('hidden');
+
+    const badge = document.getElementById('batchCountBadge');
+    badge.textContent = `${state.batchFiles.length} Resumes Ready`;
+    badge.classList.remove('hidden');
 
     state.batchFiles.slice(0, 8).forEach(file => {
         const item = document.createElement('div');
-        item.className = 'text-xs px-2.5 py-1.5 bg-blue-50 text-blue-700 rounded-md border border-blue-200 flex items-center gap-1.5';
-        item.innerHTML = `<i data-lucide="file-text" class="w-3.5 h-3.5"></i> <span class="truncate max-w-[150px]">${file.name}</span>`;
+        item.className = 'text-3xs px-2.5 py-1.5 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 rounded-md border border-blue-200 dark:border-blue-800 flex items-center gap-1.5 font-semibold';
+        item.innerHTML = `<i data-lucide="file-text" class="w-3 h-3"></i> <span class="truncate max-w-[130px]">${file.name}</span>`;
         container.appendChild(item);
     });
     if (state.batchFiles.length > 8) {
         const more = document.createElement('span');
-        more.className = 'text-xs text-slate-500 self-center';
+        more.className = 'text-3xs text-slate-400 self-center font-bold';
         more.textContent = `+${state.batchFiles.length - 8} more`;
         container.appendChild(more);
     }
     initLucide();
+    showToast('Resumes Ready', `${state.batchFiles.length} files prepared for batch comparison`, 'info');
 }
 
-// Sample Loader
-function loadSelectedSample(e) {
-    const selectedKey = e.target.value;
-    if (!selectedKey || !state.samples) return;
-
-    if (selectedKey === 'fullstack_alex') {
-        const jd = state.samples.job_descriptions['senior_fullstack_engineer']?.content;
-        const res = state.samples.resumes['alex_turner_fullstack']?.content;
-        if (jd && res) {
-            setJDInputType('paste');
-            setResumeInputType('paste');
-            document.getElementById('jdTextArea').value = jd;
-            document.getElementById('resumeTextArea').value = res;
-        }
-    } else if (selectedKey === 'datascience_sarah') {
-        const jd = state.samples.job_descriptions['lead_data_scientist']?.content;
-        const res = state.samples.resumes['sarah_chen_datascience']?.content;
-        if (jd && res) {
-            setJDInputType('paste');
-            setResumeInputType('paste');
-            document.getElementById('jdTextArea').value = jd;
-            document.getElementById('resumeTextArea').value = res;
-        }
-    } else if (selectedKey === 'devops_marcus') {
-        const jd = state.samples.job_descriptions['devops_cloud_architect']?.content;
-        const res = state.samples.resumes['marcus_vance_devops']?.content;
-        if (jd && res) {
-            setJDInputType('paste');
-            setResumeInputType('paste');
-            document.getElementById('jdTextArea').value = jd;
-            document.getElementById('resumeTextArea').value = res;
-        }
-    } else if (selectedKey === 'junior_gap_test') {
-        const jd = state.samples.job_descriptions['senior_fullstack_engineer']?.content;
-        const res = state.samples.resumes['jordan_lee_junior_dev']?.content;
-        if (jd && res) {
-            setJDInputType('paste');
-            setResumeInputType('paste');
-            document.getElementById('jdTextArea').value = jd;
-            document.getElementById('resumeTextArea').value = res;
-        }
-    }
-}
-
-// Run Single Resume Analysis
+// Single Analysis
 async function runSingleAnalysis() {
     const btn = document.getElementById('btnAnalyzeSingle');
     const spinner = document.getElementById('analyzeSpinner');
     const btnText = document.getElementById('analyzeBtnText');
 
-    // Build FormData
     const formData = new FormData();
-    
+
     // Resume
     const isFileTab = !document.getElementById('resumeFileArea').classList.contains('hidden');
     if (isFileTab && state.resumeFile) {
@@ -297,7 +365,7 @@ async function runSingleAnalysis() {
     } else {
         const text = document.getElementById('resumeTextArea').value.trim();
         if (!text) {
-            alert('Please select a resume file or paste resume text.');
+            showToast('Input Required', 'Please select a resume file or paste text.', 'error');
             return;
         }
         formData.append('resume_text', text);
@@ -310,16 +378,15 @@ async function runSingleAnalysis() {
     } else {
         const jdText = document.getElementById('jdTextArea').value.trim();
         if (!jdText) {
-            alert('Please provide a job description (paste or upload).');
+            showToast('Input Required', 'Please provide a target job description.', 'error');
             return;
         }
         formData.append('jd_text', jdText);
     }
 
-    // Loading State
     btn.disabled = true;
     spinner.classList.remove('hidden');
-    btnText.textContent = 'Analyzing Resume & JD...';
+    btnText.textContent = 'Scanning candidate profile...';
 
     try {
         const res = await fetch('/api/analyze', {
@@ -335,82 +402,78 @@ async function runSingleAnalysis() {
         const data = await res.json();
         state.lastAnalysis = data;
         renderSingleResults(data);
-
-        // Smooth scroll to results
-        document.getElementById('singleResultsSection').scrollIntoView({ behavior: 'smooth' });
+        showToast('Analysis Complete', `${data.candidate_name}: ${data.overall_score}% Match (${data.fit_tier})`, 'success');
     } catch (err) {
-        alert(`Error: ${err.message}`);
+        showToast('Analysis Error', err.message, 'error');
     } finally {
         btn.disabled = false;
         spinner.classList.add('hidden');
-        btnText.textContent = 'Match & Analyze Candidate';
+        btnText.textContent = 'Run AI Match & Scoring';
     }
 }
 
-// Render Single Analysis Dashboard
+// Render Results on Studio Canvas
 function renderSingleResults(data) {
-    const resultsSec = document.getElementById('singleResultsSection');
-    resultsSec.classList.remove('hidden');
+    document.getElementById('studioEmptyState')?.classList.add('hidden');
+    document.getElementById('studioResultsCanvas')?.classList.remove('hidden');
 
-    // Hero Overview
+    document.getElementById('btnTopDownloadPDF')?.classList.remove('hidden');
+    document.getElementById('btnTopPrint')?.classList.remove('hidden');
+
     document.getElementById('resCandidateName').textContent = data.candidate_name || 'Candidate';
     document.getElementById('resFileName').textContent = data.filename || 'Resume';
     document.getElementById('resVerdict').textContent = data.verdict;
     document.getElementById('resFitTier').textContent = data.fit_tier;
 
-    // Badge Color
+    // Fit tier badge colors
     const tierBadge = document.getElementById('resFitTierBadge');
-    tierBadge.className = `inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-        data.fit_tier === 'Exceptional Match' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
-        data.fit_tier === 'Strong Match' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-        data.fit_tier === 'Moderate Match' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-        'bg-rose-100 text-rose-800 border border-rose-200'
-    }`;
+    if (data.overall_score >= 80) {
+        tierBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+    } else if (data.overall_score >= 65) {
+        tierBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+    } else if (data.overall_score >= 50) {
+        tierBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+    } else {
+        tierBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+    }
 
-    // Circular Score Gauge
     animateGauge(data.overall_score);
 
-    // Breakdown Cards
+    // Score Breakdown
     const sc = data.scores || {};
     document.getElementById('scoreSkills').textContent = `${sc.skills_score}%`;
     document.getElementById('scoreSemantic').textContent = `${sc.semantic_score}%`;
     document.getElementById('scoreExp').textContent = `${sc.experience_score}%`;
     document.getElementById('scoreATS').textContent = `${sc.ats_formatting_score}%`;
 
-    // Candidate Details
+    // Candidate Credentials
     const ats = data.ats_metrics || {};
     const contact = ats.contact || {};
     document.getElementById('metaEmail').textContent = contact.email || 'Not detected';
     document.getElementById('metaPhone').textContent = contact.phone || 'Not detected';
-    
+
     const linksEl = document.getElementById('metaLinks');
     linksEl.innerHTML = '';
     if (contact.linkedin) {
-        linksEl.innerHTML += `<a href="${contact.linkedin}" target="_blank" class="text-blue-600 hover:underline inline-flex items-center gap-1 mr-3"><i data-lucide="linkedin" class="w-3.5 h-3.5"></i> LinkedIn</a>`;
+        linksEl.innerHTML += `<a href="${contact.linkedin}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 mr-2"><i data-lucide="linkedin" class="w-3 h-3"></i> LinkedIn</a>`;
     }
     if (contact.github) {
-        linksEl.innerHTML += `<a href="${contact.github}" target="_blank" class="text-slate-800 hover:underline inline-flex items-center gap-1"><i data-lucide="github" class="w-3.5 h-3.5"></i> GitHub</a>`;
+        linksEl.innerHTML += `<a href="${contact.github}" target="_blank" class="text-slate-800 dark:text-slate-200 hover:underline inline-flex items-center gap-1"><i data-lucide="github" class="w-3 h-3"></i> GitHub</a>`;
     }
     if (!contact.linkedin && !contact.github) {
-        linksEl.textContent = 'None detected';
+        linksEl.textContent = 'None';
     }
 
     const exp = data.experience_analysis || {};
-    document.getElementById('metaExpYears').textContent = `${exp.candidate_years} years (Job asks ~${exp.required_years} yrs)`;
-    document.getElementById('metaSeniority').textContent = `${exp.candidate_seniority} (Target: ${exp.required_seniority})`;
+    document.getElementById('metaExpYears').textContent = `${exp.candidate_years} yrs (Job: ~${exp.required_years} yrs)`;
+    document.getElementById('metaSeniority').textContent = `${exp.candidate_seniority}`;
 
-    // ATS Readability Metrics
     document.getElementById('metaWordCount').textContent = ats.word_count || 0;
     document.getElementById('metaActionVerbs').textContent = ats.action_verbs_count || 0;
     document.getElementById('metaMetricsCount').textContent = ats.metrics_count || 0;
 
-    // Render Radar Chart
     renderRadarChart(sc);
-
-    // Render Skills Audit
     renderSkillsAudit(data.skills_analysis);
-
-    // Render Actionable Suggestions
     renderSuggestions(data.suggestions);
 
     initLucide();
@@ -419,6 +482,8 @@ function renderSingleResults(data) {
 function animateGauge(score) {
     const circle = document.getElementById('scoreCircle');
     const scoreText = document.getElementById('overallScoreText');
+    if (!circle || !scoreText) return;
+
     const radius = circle.r.baseVal.value;
     const circumference = 2 * Math.PI * radius;
 
@@ -426,13 +491,11 @@ function animateGauge(score) {
     const offset = circumference - (score / 100) * circumference;
     circle.style.strokeDashoffset = offset;
 
-    // Color gradient
-    if (score >= 80) circle.style.stroke = '#10b981'; // emerald
-    else if (score >= 65) circle.style.stroke = '#3b82f6'; // blue
-    else if (score >= 50) circle.style.stroke = '#f59e0b'; // amber
-    else circle.style.stroke = '#ef4444'; // rose
+    if (score >= 80) circle.style.stroke = '#10b981';
+    else if (score >= 65) circle.style.stroke = '#6366f1';
+    else if (score >= 50) circle.style.stroke = '#f59e0b';
+    else circle.style.stroke = '#ef4444';
 
-    // Count up animation
     let current = 0;
     const step = score / 35;
     const interval = setInterval(() => {
@@ -453,6 +516,10 @@ function renderRadarChart(scores) {
         state.chartInstance.destroy();
     }
 
+    const isDark = state.theme === 'dark';
+    const gridColor = isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(226, 232, 240, 0.9)';
+    const textColor = isDark ? '#94a3b8' : '#475569';
+
     state.chartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
@@ -466,12 +533,10 @@ function renderRadarChart(scores) {
                     scores.ats_formatting_score || 0,
                     Math.min(100, (scores.skills_score + scores.ats_formatting_score) / 2)
                 ],
-                backgroundColor: 'rgba(99, 102, 241, 0.22)',
+                backgroundColor: isDark ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)',
                 borderColor: '#6366f1',
                 pointBackgroundColor: '#4f46e5',
                 pointBorderColor: '#ffffff',
-                pointHoverBackgroundColor: '#ffffff',
-                pointHoverBorderColor: '#4f46e5',
                 borderWidth: 2.5
             }]
         },
@@ -480,11 +545,11 @@ function renderRadarChart(scores) {
             maintainAspectRatio: false,
             scales: {
                 r: {
-                    angleLines: { color: 'rgba(226, 232, 240, 0.9)' },
-                    grid: { color: 'rgba(226, 232, 240, 0.9)' },
+                    angleLines: { color: gridColor },
+                    grid: { color: gridColor },
                     pointLabels: {
-                        font: { size: 11, family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
-                        color: '#334155'
+                        font: { size: 10, family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+                        color: textColor
                     },
                     suggestedMin: 0,
                     suggestedMax: 100,
@@ -504,7 +569,6 @@ function renderSkillsAudit(skills) {
     const matchedContainer = document.getElementById('matchedSkillsContainer');
     const extraContainer = document.getElementById('extraSkillsContainer');
 
-    // Counts
     document.getElementById('critMissingCount').textContent = skills.critical_missing_skills?.length || 0;
     document.getElementById('allMissingCount').textContent = skills.missing_count || 0;
     document.getElementById('matchedCount').textContent = skills.matched_count || 0;
@@ -513,27 +577,18 @@ function renderSkillsAudit(skills) {
     critContainer.innerHTML = '';
     const critList = skills.critical_missing_skills || [];
     if (critList.length === 0) {
-        critContainer.innerHTML = '<span class="text-xs text-emerald-600 font-bold flex items-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4"></i> None! All high-priority JD skills matched perfectly.</span>';
+        critContainer.innerHTML = '<span class="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> None! All high-priority skills covered.</span>';
     } else {
         critList.forEach(skill => {
             const pill = document.createElement('span');
-            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-rose-700 border-2 border-rose-200 rounded-xl text-xs font-bold shadow-xs hover:border-rose-400 hover:bg-rose-50/50 transition-all';
-            pill.innerHTML = `<i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-500"></i> ${skill}`;
+            pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800 rounded-lg text-2xs font-bold shadow-2xs hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer';
+            pill.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3 text-rose-500"></i> ${skill}`;
+            pill.title = 'Click to copy';
+            pill.onclick = () => {
+                navigator.clipboard.writeText(skill);
+                showToast('Copied', `"${skill}" copied to clipboard`, 'info');
+            };
             critContainer.appendChild(pill);
-        });
-    }
-
-    // All Missing
-    allMissingContainer.innerHTML = '';
-    const allMiss = skills.missing_skills || [];
-    if (allMiss.length === 0) {
-        allMissingContainer.innerHTML = '<span class="text-xs text-slate-400">Zero missing skills detected.</span>';
-    } else {
-        allMiss.forEach(skill => {
-            const pill = document.createElement('span');
-            pill.className = 'inline-flex items-center px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg text-xs font-medium hover:border-slate-400 hover:bg-slate-50 transition-all';
-            pill.textContent = skill;
-            allMissingContainer.appendChild(pill);
         });
     }
 
@@ -542,17 +597,27 @@ function renderSkillsAudit(skills) {
     const matched = skills.matched_skills || [];
     matched.forEach(skill => {
         const pill = document.createElement('span');
-        pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-emerald-700 border-2 border-emerald-200 rounded-xl text-xs font-bold shadow-xs hover:border-emerald-400 hover:bg-emerald-50/50 transition-all';
-        pill.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-500"></i> ${skill}`;
+        pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 rounded-lg text-2xs font-bold shadow-2xs';
+        pill.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-500"></i> ${skill}`;
         matchedContainer.appendChild(pill);
     });
 
-    // Extra candidate skills
+    // All Missing
+    allMissingContainer.innerHTML = '';
+    const allMiss = skills.missing_skills || [];
+    allMiss.forEach(skill => {
+        const pill = document.createElement('span');
+        pill.className = 'inline-flex items-center px-2 py-0.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 rounded text-3xs font-medium';
+        pill.textContent = skill;
+        allMissingContainer.appendChild(pill);
+    });
+
+    // Extra skills
     extraContainer.innerHTML = '';
     const extra = skills.extra_skills || [];
     extra.forEach(skill => {
         const pill = document.createElement('span');
-        pill.className = 'inline-flex items-center px-2.5 py-1 bg-white text-purple-700 border border-purple-200 rounded-lg text-xs font-semibold shadow-2xs hover:bg-purple-50/50 transition-all';
+        pill.className = 'inline-flex items-center px-2 py-0.5 bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded text-3xs font-bold';
         pill.textContent = skill;
         extraContainer.appendChild(pill);
     });
@@ -563,49 +628,41 @@ function renderSuggestions(suggestions) {
     container.innerHTML = '';
 
     if (!suggestions || suggestions.length === 0) {
-        container.innerHTML = '<div class="text-sm text-emerald-600 font-semibold p-4 bg-emerald-50 rounded-xl border border-emerald-200">No major optimization issues detected. Excellent resume alignment!</div>';
+        container.innerHTML = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800">No major optimization gaps detected. Excellent alignment!</div>';
         return;
     }
 
     suggestions.forEach(item => {
-        const borderCol = item.type === 'critical' ? 'border-l-4 border-l-rose-500 border-rose-200 bg-gradient-to-r from-rose-50/90 via-red-50/40 to-white' :
-                          item.type === 'warning' ? 'border-l-4 border-l-amber-500 border-amber-200 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-white' : 
-                          'border-l-4 border-l-blue-500 border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white';
-        const iconBg = item.type === 'critical' ? 'bg-rose-100 text-rose-600' :
-                       item.type === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600';
+        const borderCol = item.type === 'critical' ? 'border-l-4 border-l-rose-500 border-rose-200 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20' :
+                          item.type === 'warning' ? 'border-l-4 border-l-amber-500 border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20' : 
+                          'border-l-4 border-l-blue-500 border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20';
+        const iconBg = item.type === 'critical' ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400' :
+                       item.type === 'warning' ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400' : 'bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400';
 
         const div = document.createElement('div');
-        div.className = `p-4 rounded-xl border ${borderCol} flex gap-3.5 shadow-xs card-hover-lift`;
+        div.className = `p-3.5 rounded-xl border ${borderCol} flex gap-3 shadow-2xs card-hover-lift`;
         div.innerHTML = `
-            <div class="w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
-                <i data-lucide="${item.icon || 'info'}" class="w-4 h-4"></i>
+            <div class="w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="${item.icon || 'info'}" class="w-3.5 h-3.5"></i>
             </div>
             <div>
-                <h4 class="text-xs font-bold text-slate-900">${item.title}</h4>
-                <p class="text-xs text-slate-600 mt-1 leading-relaxed">${item.message}</p>
+                <h5 class="text-2xs font-extrabold text-slate-900 dark:text-white">${item.title}</h5>
+                <p class="text-3xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">${item.message}</p>
             </div>
         `;
         container.appendChild(div);
     });
 }
 
-// Copy Missing Skills to Clipboard
 function copyMissingSkillsToClipboard() {
     if (!state.lastAnalysis) return;
     const missing = state.lastAnalysis.skills_analysis.missing_skills || [];
     if (missing.length === 0) {
-        alert('No missing skills to copy!');
+        showToast('Info', 'No missing skills to copy!', 'info');
         return;
     }
     navigator.clipboard.writeText(missing.join(', ')).then(() => {
-        const btn = document.getElementById('btnCopyMissingSkills');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Copied!`;
-        initLucide();
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            initLucide();
-        }, 2000);
+        showToast('Copied to Clipboard', `${missing.length} missing skills copied.`, 'success');
     });
 }
 
@@ -616,13 +673,13 @@ async function handleEnhanceBullet() {
     const resultsContainer = document.getElementById('bulletVariationsContainer');
 
     if (!input) {
-        alert('Please enter a resume bullet point to optimize.');
+        showToast('Required', 'Please enter a bullet point to enhance.', 'error');
         return;
     }
 
     const btn = document.getElementById('btnEnhanceBullet');
     btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Rewriting...`;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Generating XYZ variations...`;
     initLucide();
 
     try {
@@ -632,54 +689,64 @@ async function handleEnhanceBullet() {
             body: JSON.stringify({ bullet: input, target_skill: skill })
         });
         const data = await res.json();
-        
+
         resultsContainer.innerHTML = '';
         const optThemes = [
-            { border: 'border-blue-200', bg: 'bg-gradient-to-br from-blue-50/70 via-white to-cyan-50/30', badge: 'bg-blue-100 text-blue-800 border-blue-200', title: 'Option 1 • High Metric Focus' },
-            { border: 'border-indigo-200', bg: 'bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/30', badge: 'bg-indigo-100 text-indigo-800 border-indigo-200', title: 'Option 2 • Architecture & Scale' },
-            { border: 'border-purple-200', bg: 'bg-gradient-to-br from-purple-50/70 via-white to-pink-50/30', badge: 'bg-purple-100 text-purple-800 border-purple-200', title: 'Option 3 • Speed & Efficiency' }
+            { border: 'border-blue-200 dark:border-blue-900', bg: 'bg-blue-50/50 dark:bg-blue-950/20', badge: 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800', title: 'Option 1 • Impact & Metrics' },
+            { border: 'border-indigo-200 dark:border-indigo-900', bg: 'bg-indigo-50/50 dark:bg-indigo-950/20', badge: 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800', title: 'Option 2 • Architecture & Scale' },
+            { border: 'border-purple-200 dark:border-purple-900', bg: 'bg-purple-50/50 dark:bg-purple-950/20', badge: 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800', title: 'Option 3 • Speed & Uptime' }
         ];
 
         data.variations.forEach((varText, idx) => {
             const theme = optThemes[idx % optThemes.length];
             const card = document.createElement('div');
-            card.className = `p-3.5 ${theme.bg} border-2 ${theme.border} rounded-xl shadow-xs hover:shadow-md transition-all group relative`;
+            card.className = `p-3.5 ${theme.bg} border-2 ${theme.border} rounded-xl shadow-xs transition-all`;
             card.innerHTML = `
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-2xs font-extrabold px-2.5 py-0.5 rounded-full border ${theme.badge}">${theme.title}</span>
-                    <button class="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-1 font-semibold copy-btn bg-white px-2 py-0.5 rounded border border-slate-200 shadow-2xs">
-                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                    <span class="text-3xs font-extrabold px-2.5 py-0.5 rounded-full border ${theme.badge}">${theme.title}</span>
+                    <button class="text-2xs text-slate-500 hover:text-blue-600 flex items-center gap-1 font-semibold copy-btn bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                        <i data-lucide="copy" class="w-3 h-3"></i> Copy
                     </button>
                 </div>
-                <p class="text-xs text-slate-800 leading-relaxed font-medium">${varText}</p>
+                <p class="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">${varText}</p>
             `;
-            // Copy click handler
             card.querySelector('.copy-btn').addEventListener('click', () => {
                 navigator.clipboard.writeText(varText);
-                card.querySelector('.copy-btn').innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i> Copied!`;
-                initLucide();
+                showToast('Copied', 'Enhanced bullet point copied to clipboard!', 'success');
             });
             resultsContainer.appendChild(card);
         });
         resultsContainer.classList.remove('hidden');
         initLucide();
     } catch (e) {
-        alert('Failed to optimize bullet.');
+        showToast('Error', 'Failed to generate bullet variations.', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i> Optimize Bullet Point`;
+        btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i> Generate 3 High-Impact XYZ Variations`;
         initLucide();
     }
 }
 
 // AI Interview Prep
 async function handleGenInterviewPrep() {
-    if (!state.lastAnalysis) return;
+    let matched = [];
+    let missing = [];
+    let candName = 'Candidate';
+
+    if (state.lastAnalysis) {
+        matched = state.lastAnalysis.skills_analysis.matched_skills;
+        missing = state.lastAnalysis.skills_analysis.missing_skills;
+        candName = state.lastAnalysis.candidate_name;
+    } else {
+        matched = ['Python', 'FastAPI', 'Docker', 'React'];
+        missing = ['Kubernetes', 'Terraform'];
+    }
+
     const btn = document.getElementById('btnGenInterview');
     const container = document.getElementById('interviewQuestionsList');
-    
+
     btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Generating tailored questions...`;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Generating questions...`;
     initLucide();
 
     try {
@@ -687,23 +754,23 @@ async function handleGenInterviewPrep() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                matched_skills: state.lastAnalysis.skills_analysis.matched_skills,
-                missing_skills: state.lastAnalysis.skills_analysis.missing_skills,
-                candidate_name: state.lastAnalysis.candidate_name
+                matched_skills: matched,
+                missing_skills: missing,
+                candidate_name: candName
             })
         });
         const data = await res.json();
-        
+
         container.innerHTML = '';
         data.questions.forEach((q, idx) => {
             const item = document.createElement('div');
-            item.className = 'p-3.5 bg-slate-50 border border-slate-200 rounded-lg';
+            item.className = 'p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-1.5';
             item.innerHTML = `
-                <div class="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-1">${q.category}</div>
-                <div class="text-xs font-semibold text-slate-900 mb-1.5 leading-snug">Q${idx + 1}: ${q.question}</div>
-                <div class="text-xs text-slate-600 italic bg-white p-2 rounded border border-slate-100 flex items-start gap-1.5">
+                <div class="text-3xs font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">${q.category}</div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white">Q${idx + 1}: ${q.question}</div>
+                <div class="text-2xs text-slate-600 dark:text-slate-400 italic bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 flex items-start gap-1.5">
                     <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
-                    <span><b>Candidate Prep Tip:</b> ${q.tip}</span>
+                    <span><strong>Interviewer & Prep Tip:</strong> ${q.tip}</span>
                 </div>
             `;
             container.appendChild(item);
@@ -711,21 +778,21 @@ async function handleGenInterviewPrep() {
         container.classList.remove('hidden');
         initLucide();
     } catch (e) {
-        alert('Failed to generate interview questions.');
+        showToast('Error', 'Failed to generate interview questions.', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="message-square" class="w-4 h-4"></i> Generate Interview Questions`;
+        btn.innerHTML = `<i data-lucide="message-square" class="w-4 h-4 text-pink-300"></i> Generate Tailored Interview Questions`;
         initLucide();
     }
 }
 
 // Download PDF Report
 async function downloadCurrentReportPDF() {
-    if (!state.lastAnalysis) return;
-    const btn = document.getElementById('btnDownloadPDF');
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Building PDF...`;
-    initLucide();
+    if (!state.lastAnalysis) {
+        showToast('No Data', 'Run an analysis first to download the report.', 'error');
+        return;
+    }
+    showToast('Generating PDF', 'Compiling executive audit report...', 'info');
 
     try {
         const res = await fetch('/api/export-pdf', {
@@ -745,25 +812,22 @@ async function downloadCurrentReportPDF() {
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+        showToast('Downloaded', `Report saved for ${state.lastAnalysis.candidate_name}`, 'success');
     } catch (e) {
-        alert('Failed to download PDF report.');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Download PDF Report`;
-        initLucide();
+        showToast('Error', 'Failed to generate PDF.', 'error');
     }
 }
 
-// Run Batch Recruiter Analysis
+// Batch Recruiter Analysis
 async function runBatchAnalysis() {
     if (!state.batchFiles || state.batchFiles.length === 0) {
-        alert('Please select or drop multiple resume files.');
+        showToast('Required', 'Please select multiple resumes to rank.', 'error');
         return;
     }
 
     const jdText = document.getElementById('batchJDTextArea').value.trim();
     if (!jdText) {
-        alert('Please provide a Job Description to rank candidates against.');
+        showToast('Required', 'Please provide a target job description.', 'error');
         return;
     }
 
@@ -789,13 +853,12 @@ async function runBatchAnalysis() {
         state.lastBatchResults = data.candidates;
 
         renderBatchLeaderboard(data.candidates);
-        document.getElementById('recruiterResultsSection').classList.remove('hidden');
-        document.getElementById('recruiterResultsSection').scrollIntoView({ behavior: 'smooth' });
+        showToast('Leaderboard Ready', `${data.candidates.length} candidates evaluated and ranked.`, 'success');
     } catch (e) {
-        alert(`Error: ${e.message}`);
+        showToast('Error', e.message, 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="trophy" class="w-4 h-4"></i> Rank & Compare Candidates`;
+        btn.innerHTML = `<i data-lucide="trophy" class="w-4 h-4 text-amber-300"></i> Rank & Compare Candidates`;
         initLucide();
     }
 }
@@ -804,64 +867,64 @@ function renderBatchLeaderboard(candidates) {
     const tbody = document.getElementById('batchLeaderboardBody');
     tbody.innerHTML = '';
 
-    document.getElementById('batchLeaderboardTotal').textContent = `${candidates.length} Candidates Evaluated`;
+    document.getElementById('batchLeaderboardTotal').textContent = `${candidates.length} Evaluated`;
 
     candidates.forEach((cand, idx) => {
         const tr = document.createElement('tr');
-        tr.className = 'border-b border-slate-100 hover:bg-indigo-50/30 transition-colors';
+        tr.className = 'border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors';
 
-        const tierBadgeClass = cand.fit_tier === 'Exceptional Match' ? 'bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-900 border border-emerald-300' :
-                               cand.fit_tier === 'Strong Match' ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-900 border border-blue-300' :
-                               cand.fit_tier === 'Moderate Match' ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-900 border border-amber-300' :
-                               'bg-gradient-to-r from-rose-100 to-red-100 text-rose-900 border border-rose-300';
+        const tierBadgeClass = cand.fit_tier === 'Exceptional Match' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800' :
+                               cand.fit_tier === 'Strong Match' ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800' :
+                               cand.fit_tier === 'Moderate Match' ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' :
+                               'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800';
 
         const matchedTop = (cand.skills_analysis?.matched_skills || []).slice(0, 3).join(', ');
         const missingCrit = (cand.skills_analysis?.critical_missing_skills || []).slice(0, 2).join(', ');
 
         let rankBadge = `#${idx + 1}`;
         if (idx === 0) {
-            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-100 to-yellow-200 text-amber-900 border border-amber-300 font-black text-xs shadow-2xs">🥇 #1</span>`;
+            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 font-black text-2xs">🥇 #1</span>`;
         } else if (idx === 1) {
-            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-gradient-to-r from-slate-100 to-slate-200 text-slate-800 border border-slate-300 font-black text-xs shadow-2xs">🥈 #2</span>`;
+            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-black text-2xs">🥈 #2</span>`;
         } else if (idx === 2) {
-            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-100 to-amber-100 text-orange-900 border border-orange-300 font-black text-xs shadow-2xs">🥉 #3</span>`;
+            rankBadge = `<span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-200 border border-orange-300 dark:border-orange-700 font-black text-2xs">🥉 #3</span>`;
         } else {
             rankBadge = `<span class="font-bold text-slate-500">#${idx + 1}</span>`;
         }
 
         tr.innerHTML = `
-            <td class="py-3 px-4 text-center font-bold text-slate-800">${rankBadge}</td>
-            <td class="py-3 px-4 font-bold text-slate-900">
+            <td class="py-3 px-4 text-center">${rankBadge}</td>
+            <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">
                 ${cand.candidate_name}
-                <div class="text-2xs text-slate-400 font-normal truncate max-w-[140px]">${cand.filename}</div>
+                <div class="text-3xs text-slate-400 font-normal truncate max-w-[130px]">${cand.filename}</div>
             </td>
             <td class="py-3 px-4 text-center">
-                <span class="inline-block px-2.5 py-1 font-black text-xs rounded-lg shadow-2xs ${
-                    cand.overall_score >= 70 ? 'text-emerald-800 bg-emerald-100 border border-emerald-200' :
-                    cand.overall_score >= 50 ? 'text-amber-800 bg-amber-100 border border-amber-200' : 'text-rose-800 bg-rose-100 border border-rose-200'
+                <span class="inline-block px-2.5 py-1 font-black text-xs rounded-lg ${
+                    cand.overall_score >= 70 ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800' :
+                    cand.overall_score >= 50 ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800' : 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800'
                 }">
                     ${cand.overall_score}%
                 </span>
             </td>
-            <td class="py-3 px-4 text-center text-xs text-blue-700 font-bold">${cand.scores?.skills_score}%</td>
-            <td class="py-3 px-4 text-center text-xs text-amber-700 font-bold">${cand.scores?.ats_formatting_score}%</td>
+            <td class="py-3 px-4 text-center text-xs font-bold text-blue-600 dark:text-blue-400">${cand.scores?.skills_score}%</td>
+            <td class="py-3 px-4 text-center text-xs font-bold text-amber-600 dark:text-amber-400">${cand.scores?.ats_formatting_score}%</td>
             <td class="py-3 px-4 text-center">
-                <span class="inline-block text-2xs px-2.5 py-0.5 rounded-full font-bold shadow-2xs ${tierBadgeClass}">
+                <span class="inline-block text-3xs px-2 py-0.5 rounded-full font-bold ${tierBadgeClass}">
                     ${cand.fit_tier}
                 </span>
             </td>
-            <td class="py-3 px-4 text-xs text-slate-600">
-                <div class="truncate max-w-[170px]" title="${matchedTop}">
+            <td class="py-3 px-4 text-xs text-slate-600 dark:text-slate-300">
+                <div class="truncate max-w-[160px]" title="${matchedTop}">
                     <span class="text-emerald-600 font-bold">✓</span> ${matchedTop || 'None'}
                 </div>
             </td>
-            <td class="py-3 px-4 text-xs text-slate-600">
-                <div class="truncate max-w-[170px] text-rose-600 font-medium" title="${missingCrit}">
+            <td class="py-3 px-4 text-xs text-slate-600 dark:text-slate-300">
+                <div class="truncate max-w-[160px] text-rose-600 dark:text-rose-400" title="${missingCrit}">
                     ${missingCrit ? '✗ ' + missingCrit : '<span class="text-emerald-600 font-bold">None</span>'}
                 </div>
             </td>
             <td class="py-3 px-4 text-center">
-                <button class="px-3 py-1 text-xs font-bold bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-blue-700 hover:from-blue-600 hover:to-indigo-600 hover:text-white transition-all shadow-2xs view-candidate-btn" data-index="${idx}">
+                <button class="px-2.5 py-1 text-2xs font-bold bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-lg border border-indigo-200 dark:border-indigo-800 transition-all view-candidate-btn" data-index="${idx}">
                     Inspect
                 </button>
             </td>
@@ -869,9 +932,8 @@ function renderBatchLeaderboard(candidates) {
 
         tr.querySelector('.view-candidate-btn').addEventListener('click', () => {
             state.lastAnalysis = cand;
-            switchMode('single');
+            switchView('studio');
             renderSingleResults(cand);
-            document.getElementById('singleResultsSection').scrollIntoView({ behavior: 'smooth' });
         });
 
         tbody.appendChild(tr);
@@ -887,4 +949,36 @@ function filterBatchLeaderboard(e) {
         (c.skills_analysis.matched_skills || []).some(s => s.toLowerCase().includes(term))
     );
     renderBatchLeaderboard(filtered);
+}
+
+// Toast Notifications Helper
+function showToast(title, message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    const borderCol = type === 'success' ? 'border-emerald-500' :
+                      type === 'error' ? 'border-rose-500' : 'border-indigo-500';
+    const iconName = type === 'success' ? 'check-circle' :
+                     type === 'error' ? 'alert-triangle' : 'info';
+    const iconColor = type === 'success' ? 'text-emerald-500' :
+                      type === 'error' ? 'text-rose-500' : 'text-indigo-500';
+
+    toast.className = `p-3.5 bg-white dark:bg-slate-900 border-l-4 ${borderCol} border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl flex items-center gap-3 min-w-[280px] max-w-sm pointer-events-auto toast-enter`;
+    toast.innerHTML = `
+        <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor} shrink-0"></i>
+        <div class="flex-1">
+            <h6 class="text-xs font-bold text-slate-900 dark:text-white">${title}</h6>
+            <p class="text-3xs text-slate-500 dark:text-slate-400 mt-0.5">${message}</p>
+        </div>
+    `;
+
+    container.appendChild(toast);
+    initLucide();
+
+    setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 250);
+    }, 3500);
 }
